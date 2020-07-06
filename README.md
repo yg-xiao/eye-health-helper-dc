@@ -1,7 +1,11 @@
 # eye-health-helper-dc
 护眼助手使用 20-20-20 护眼法则来防止用眼过度（适用电脑端）
+## 支持平台
+* Windows
+* Linux
+* macOS
 
-Copyright 2020  肖永刚
+Copyright 2020 肖永刚
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
