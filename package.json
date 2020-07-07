@@ -1,0 +1,55 @@
+{
+  "name": "eye-health-helper",
+  "version": "0.9.0",
+  "description": "护眼助手使用 20-20-20 护眼法则来防止用眼过度",
+  "homepage": "https://yg-xiao.github.io/eye-health-helper-dc/",
+  "main": "src/index.js",
+  "author": "肖永刚 <yongang_xiao@hotmail.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yg-xiao/eye-health-helper-dc.git"
+  },
+  "scripts": {
+    "start": "cross-env NODE_ENV=dev electron .",
+    "build-linux": "electron-builder --linux",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "publish-linux": "electron-builder --linux -p always",
+    "publish-win": "electron-builder --win -p always",
+    "publish-mac": "electron-builder --mac -p always"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2",
+    "electron": "^9.0.5",
+    "electron-builder": "^22.7.0"
+  },
+  "build": {
+    "appId": "name.yg-xiao.ehh-dc",
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility",
+      "icon": "icon-512x512.png"
+    },
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "icon-512x512.png"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "icon-512x512.png"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "yg-xiao"
+      }
+    ]
+  }
+}
