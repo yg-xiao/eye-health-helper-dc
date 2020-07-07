@@ -49,7 +49,9 @@ let menu = Menu.buildFromTemplate([
         type: 'normal'
     },
     {
-        role: 'quit',
+        click: () => {
+            app.exit()
+        },
         label: '退出应用',
         type: 'normal'
     }
@@ -61,7 +63,7 @@ app.setAboutPanelOptions({
     'copyright': 'Copyright © 2020 肖永刚',
     'authors': ['肖永刚 <yongang_xiao@hotmail.com>'],
     'website': 'https://yg-xiao.github.io/eye-health-helper-dc/',
-    'iconPath': path.join(__dirname, 'assets/images/icon-512x512.png')
+    'iconPath': path.join(__dirname, 'assets/images/icon-512x512.png')//mac不支持
 })
 
 function createEyeWindow() {
@@ -70,6 +72,7 @@ function createEyeWindow() {
         x: primaryDisplay.bounds.x + (primaryDisplay.workAreaSize.width - 400) / 2,
         y: primaryDisplay.bounds.y + (primaryDisplay.workAreaSize.height - 300) / 2,
         frame: false,
+        show: false,
         backgroundColor: '#dcedc8',
         width: 400,
         height: 300,
@@ -85,6 +88,11 @@ function createEyeWindow() {
 
     let win = new BrowserWindow(windowOptions)
     win.loadFile(path.join(__dirname, 'eye.html'))
+
+    win.once('ready-to-show', () => {
+        win.show()
+    })
+    
     win.on('closed', () => {
         eyeWindow = null
     })
@@ -96,12 +104,16 @@ function createMainWindow(display) {
     let showTimeout, hideTimeout
 
     const windowOptions = {
+        width: 0,
+        height: 0,
         x: display.bounds.x,
         y: display.bounds.y,
         frame: false,
         backgroundColor: '#dcedc8',
         show: false,
+        paintWhenInitiallyHidden: false,
         closable: false,
+        resizable: false,
         alwaysOnTop: true,
         webPreferences: {
             devTools: false,
@@ -116,19 +128,17 @@ function createMainWindow(display) {
     let win = new BrowserWindow(windowOptions)
     win.loadFile(path.join(__dirname, 'index.html'))
 
-    win.on('show', () => {
+    win.on('enter-full-screen', () => {
         console.log('休息中')
         showTimeout = setTimeout(() => {
-            mainWindows.get(display.id).setFullScreen(false)
-            mainWindows.get(display.id).hide()
+            mainWindows.get(display.id).setKiosk(false)
         }, showTime*1000)
     })
 
-    win.on('hide', () => {
+    win.on('leave-full-screen', () => {
         console.log('使用中')
         hideTimeout = setTimeout(() => {
-            mainWindows.get(display.id).setFullScreen(true)
-            mainWindows.get(display.id).show()
+            mainWindows.get(display.id).setKiosk(true)
         }, hideTime*1000)
     })
 
@@ -138,16 +148,24 @@ function createMainWindow(display) {
         mainWindows.delete(display.id)
     })
 
-    win.hide()
+    hideTimeout = setTimeout(() => {
+        mainWindows.get(display.id).setKiosk(true)
+    }, hideTime*1000)
+
     return win
 }
 
-app.on('ready', () => { 
+app.on('ready', () => {
+    if(process.platform === 'darwin') {
+        //app.dock.setIcon(path.join(__dirname, 'assets/images/icon-512x512.png'))
+        app.dock.hide()
+    }
+
     screen.getAllDisplays().forEach((display) => {
         mainWindows.set(display.id, createMainWindow(display))
     })
 
-    tray = new Tray(path.join(__dirname, 'assets/images/icon-512x512.png'))
+    tray = new Tray(path.join(__dirname, 'assets/images/trayTemplate.png'))
     tray.setToolTip('护眼助手')
     tray.setContextMenu(menu)
 
@@ -186,7 +204,7 @@ app.on('window-all-closed', () => {
     }*/
 })
 
-//Mac only
+//mac only
 app.on('activate', () => {
     if(mainWindows.size == 0) {
         screen.getAllDisplays().forEach((display) => {

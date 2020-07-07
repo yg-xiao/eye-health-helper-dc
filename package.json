@@ -31,19 +31,20 @@
         "AppImage"
       ],
       "category": "Utility",
-      "icon": "icon-512x512.png"
+      "icon": "icon.png"
     },
     "win": {
       "target": [
         "portable"
       ],
-      "icon": "icon-512x512.png"
+      "icon": "icon.png"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "icon": "icon-512x512.png"
+      "category": "public.app-category.healthcare-fitness",
+      "icon": "icon.png"
     },
     "publish": [
       {
