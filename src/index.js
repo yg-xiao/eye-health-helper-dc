@@ -3,6 +3,8 @@ const process = require('process')
 const console = require('console')
 const path = require('path')
 
+const myModule = require('./module')
+
 if(!app.requestSingleInstanceLock()) {
     app.quit()
 } else {
@@ -73,11 +75,12 @@ function createEyeWindow() {
         y: primaryDisplay.bounds.y + (primaryDisplay.workAreaSize.height - 300) / 2,
         frame: false,
         show: false,
+        resizable: false,
         backgroundColor: '#dcedc8',
         width: 400,
         height: 300,
         webPreferences: {
-            devTools: false,
+            devTools: process.env.NODE_ENV == 'dev' ? true : false,
             sandbox: true
         }
     }
@@ -111,12 +114,11 @@ function createMainWindow(display) {
         frame: false,
         backgroundColor: '#dcedc8',
         show: false,
-        paintWhenInitiallyHidden: false,
         closable: false,
         resizable: false,
         alwaysOnTop: true,
         webPreferences: {
-            devTools: false,
+            devTools: process.env.NODE_ENV == 'dev' ? true : false,
             sandbox: true
         }
     }
@@ -128,21 +130,25 @@ function createMainWindow(display) {
     let win = new BrowserWindow(windowOptions)
     win.loadFile(path.join(__dirname, 'index.html'))
 
-    win.on('enter-full-screen', () => {
+    win.on('enter-full-screen', myModule.debounce(() => {
         console.log('休息中')
+        clearTimeout(showTimeout)
         showTimeout = setTimeout(() => {
             mainWindows.get(display.id).setKiosk(false)
+            mainWindows.get(display.id).hide()
         }, showTime*1000)
-    })
+    }))
 
-    win.on('leave-full-screen', () => {
+    win.on('leave-full-screen', myModule.debounce(() => {
         console.log('使用中')
+        clearTimeout(hideTimeout)
         hideTimeout = setTimeout(() => {
             mainWindows.get(display.id).setKiosk(true)
         }, hideTime*1000)
-    })
+    }))
 
     win.on('closed', () => {
+        console.log('closed window')
         clearTimeout(showTimeout)
         clearTimeout(hideTimeout)
         mainWindows.delete(display.id)
@@ -159,13 +165,15 @@ app.on('ready', () => {
     if(process.platform === 'darwin') {
         //app.dock.setIcon(path.join(__dirname, 'assets/images/icon-512x512.png'))
         app.dock.hide()
+        tray = new Tray(path.join(__dirname, 'assets/images/trayTemplate.png'))
+    } else {
+        tray = new Tray(path.join(__dirname, 'assets/images/icon-512x512.png'))
     }
 
     screen.getAllDisplays().forEach((display) => {
         mainWindows.set(display.id, createMainWindow(display))
     })
-
-    tray = new Tray(path.join(__dirname, 'assets/images/trayTemplate.png'))
+    
     tray.setToolTip('护眼助手')
     tray.setContextMenu(menu)
 
