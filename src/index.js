@@ -9,8 +9,8 @@ if(!app.requestSingleInstanceLock()) {
     app.quit()
 } else {
 console.log(process.env.NODE_ENV)
-const showTime = process.env.NODE_ENV == 'dev' ? 5 : 60
-const hideTime = process.env.NODE_ENV == 'dev' ? 20 : 1200
+const showTime = process.env.NODE_ENV == 'dev' ? 5 : 20
+const hideTime = process.env.NODE_ENV == 'dev' ? 60 : 1200
 let mainWindows = new Map()
 let eyeWindow = null
 let tray = null
