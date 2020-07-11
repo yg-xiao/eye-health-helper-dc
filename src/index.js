@@ -114,24 +114,22 @@ function createMainWindow(display) {
         frame: false,
         backgroundColor: '#dcedc8',
         show: false,
-        closable: false,
-        resizable: false,
+        //closable: false,
+        resizable: process.platform === 'win32' ? true : false,
         alwaysOnTop: true,
+        icon: path.join(__dirname, 'assets/images/icon-512x512.png'),
         webPreferences: {
             devTools: process.env.NODE_ENV == 'dev' ? true : false,
             sandbox: process.env.NODE_ENV == 'dev' ? false : true
         }
     }
 
-    if (process.platform === 'linux') {
-        windowOptions.icon = path.join(__dirname, 'assets/images/icon-512x512.png')
-    }
-
     let win = new BrowserWindow(windowOptions)
     win.loadFile(path.join(__dirname, 'index.html')).then(() => {
         console.log('使用中')
         hideTimeout = setTimeout(() => {
-            mainWindows.get(display.id).setKiosk(true)
+            mainWindows.get(display.id).setFullScreen(true)
+            mainWindows.get(display.id).show()
         }, hideTime*1000)
     })
 
@@ -139,7 +137,7 @@ function createMainWindow(display) {
         console.log('休息中')
         clearTimeout(showTimeout)
         showTimeout = setTimeout(() => {
-            mainWindows.get(display.id).setKiosk(false)
+            mainWindows.get(display.id).setFullScreen(false)
             mainWindows.get(display.id).hide()
         }, showTime*1000)
     }))
@@ -148,7 +146,8 @@ function createMainWindow(display) {
         console.log('使用中')
         clearTimeout(hideTimeout)
         hideTimeout = setTimeout(() => {
-            mainWindows.get(display.id).setKiosk(true)
+            mainWindows.get(display.id).setFullScreen(true)
+            mainWindows.get(display.id).show()
         }, hideTime*1000)
     }))
 
@@ -189,10 +188,12 @@ app.on('ready', () => {
     })
 
     powerMonitor.on('lock-screen', () => {
+        console.log('lock-screen')
         mainWindows.forEach((win) => { win.close() })
     })
 
     powerMonitor.on('unlock-screen', () => {
+        console.log('unlock-screen')
         screen.getAllDisplays().forEach((display) => {
             mainWindows.set(display.id, createMainWindow(display))
         })
