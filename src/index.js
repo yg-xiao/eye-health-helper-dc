@@ -81,7 +81,7 @@ function createEyeWindow() {
         height: 300,
         webPreferences: {
             devTools: process.env.NODE_ENV == 'dev' ? true : false,
-            sandbox: true
+            sandbox: process.env.NODE_ENV == 'dev' ? false : true
         }
     }
 
@@ -119,7 +119,7 @@ function createMainWindow(display) {
         alwaysOnTop: true,
         webPreferences: {
             devTools: process.env.NODE_ENV == 'dev' ? true : false,
-            sandbox: true
+            sandbox: process.env.NODE_ENV == 'dev' ? false : true
         }
     }
 
@@ -128,7 +128,12 @@ function createMainWindow(display) {
     }
 
     let win = new BrowserWindow(windowOptions)
-    win.loadFile(path.join(__dirname, 'index.html'))
+    win.loadFile(path.join(__dirname, 'index.html')).then(() => {
+        console.log('使用中')
+        hideTimeout = setTimeout(() => {
+            mainWindows.get(display.id).setKiosk(true)
+        }, hideTime*1000)
+    })
 
     win.on('enter-full-screen', myModule.debounce(() => {
         console.log('休息中')
@@ -153,10 +158,6 @@ function createMainWindow(display) {
         clearTimeout(hideTimeout)
         mainWindows.delete(display.id)
     })
-
-    hideTimeout = setTimeout(() => {
-        mainWindows.get(display.id).setKiosk(true)
-    }, hideTime*1000)
 
     return win
 }
