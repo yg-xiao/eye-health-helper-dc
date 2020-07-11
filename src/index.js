@@ -11,6 +11,7 @@ if(!app.requestSingleInstanceLock()) {
 console.log(process.env.NODE_ENV)
 const showTime = process.env.NODE_ENV == 'dev' ? 5 : 20
 const hideTime = process.env.NODE_ENV == 'dev' ? 60 : 1200
+let closable = false
 let mainWindows = new Map()
 let eyeWindow = null
 let tray = null
@@ -79,14 +80,11 @@ function createEyeWindow() {
         backgroundColor: '#dcedc8',
         width: 400,
         height: 300,
+        icon: path.join(__dirname, 'assets/images/icon-512x512.png'),
         webPreferences: {
             devTools: process.env.NODE_ENV == 'dev' ? true : false,
             sandbox: process.env.NODE_ENV == 'dev' ? false : true
         }
-    }
-
-    if (process.platform === 'linux') {
-        windowOptions.icon = path.join(__dirname, 'assets/images/icon-512x512.png')
     }
 
     let win = new BrowserWindow(windowOptions)
@@ -114,7 +112,6 @@ function createMainWindow(display) {
         frame: false,
         backgroundColor: '#dcedc8',
         show: false,
-        //closable: false,
         resizable: process.platform === 'win32' ? true : false,
         alwaysOnTop: true,
         icon: path.join(__dirname, 'assets/images/icon-512x512.png'),
@@ -129,30 +126,38 @@ function createMainWindow(display) {
         console.log('使用中')
         hideTimeout = setTimeout(() => {
             mainWindows.get(display.id).setFullScreen(true)
-            mainWindows.get(display.id).show()
         }, hideTime*1000)
     })
 
     win.on('enter-full-screen', myModule.debounce(() => {
         console.log('休息中')
+        mainWindows.get(display.id).show()
         clearTimeout(showTimeout)
         showTimeout = setTimeout(() => {
             mainWindows.get(display.id).setFullScreen(false)
-            mainWindows.get(display.id).hide()
         }, showTime*1000)
     }))
 
     win.on('leave-full-screen', myModule.debounce(() => {
         console.log('使用中')
+        mainWindows.get(display.id).hide()
         clearTimeout(hideTimeout)
         hideTimeout = setTimeout(() => {
             mainWindows.get(display.id).setFullScreen(true)
-            mainWindows.get(display.id).show()
         }, hideTime*1000)
     }))
 
+    win.on('close', (event) => {
+        if(!closable) {
+            event.preventDefault()
+            console.log('不允许关闭窗口')
+        } else {
+            closable = false
+        }
+    })
+
     win.on('closed', () => {
-        console.log('closed window')
+        console.log('窗口已关闭')
         clearTimeout(showTimeout)
         clearTimeout(hideTimeout)
         mainWindows.delete(display.id)
@@ -184,12 +189,16 @@ app.on('ready', () => {
 
     screen.on('display-removed', (event, oldDisplay) => {
         console.log(oldDisplay)
+        closable = true
         mainWindows.get(oldDisplay.id).close()
     })
 
     powerMonitor.on('lock-screen', () => {
         console.log('lock-screen')
-        mainWindows.forEach((win) => { win.close() })
+        mainWindows.forEach((win) => {
+            closable = true
+            win.close()
+        })
     })
 
     powerMonitor.on('unlock-screen', () => {
