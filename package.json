@@ -25,7 +25,7 @@
     "electron-builder": "^22.7.0"
   },
   "build": {
-    "appId": "name.yg-xiao.ehh-dc",
+    "appId": "name.yg-xiao.eyehh-dc",
     "linux": {
       "target": [
         "AppImage"
